@@ -17,9 +17,9 @@ const SQUARE_COORDINATES: [(i8, i8); 8] = [
 
 #[derive(Debug, Clone)]
 pub struct TileMap {
-    bomb_count: u16,
-    height: u16,
-    width: u16,
+    pub bomb_count: u16,
+    pub height: u16,
+    pub width: u16,
     map: Vec<Vec<Tile>>,
 }
 
