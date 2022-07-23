@@ -10,7 +10,7 @@ fn main() {
 
     app.insert_resource(WindowDescriptor {
         title: "Mine Sweeper".to_string(),
-        width: 700.,
+        width: 800.,
         height: 800.,
         ..Default::default()
     })
@@ -21,7 +21,8 @@ fn main() {
     app.insert_resource(BoardOptions {
         map_size: (20, 20),
         bomb_count: 40,
-        tile_padding: 3.0,
+        tile_padding: 1.0,
+        safe_start: true,
         ..Default::default()
     });
     app.add_plugin(BoardPlugin);
