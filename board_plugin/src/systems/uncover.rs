@@ -1,5 +1,4 @@
 use crate::events::UncoverAdjacentTilesEvent;
-use crate::resources::tilemap::TileMap;
 use crate::{
     Board, BoardCompletedEvent, Bomb, BombExplosionEvent, BombNeighbor, Coordinates,
     TileTriggerEvent, Uncover,
