@@ -1,5 +1,5 @@
 [workspace]
-members = ["client", "server", "board_plugin"]
+members = ["client", "server", "board_plugin", "network_shared"]
 resolver = "2"
 
 [profile.dev.package."*"]

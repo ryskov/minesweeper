@@ -1,5 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use naia_bevy_client::Client;
+use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, Stage};
+use network_shared::{protocol::{Auth, Protocol}, shared_config, Channels};
+
 use bevy::log;
 use bevy::prelude::*;
 use board_plugin::events::*;
@@ -29,7 +33,11 @@ fn main() {
     app.add_plugins(DefaultPlugins);
     #[cfg(feature = "debug")]
     app.add_plugin(WorldInspectorPlugin::new());
-    app.add_plugin(BoardPlugin {
+    app.add_plugin(ClientPlugin::<Protocol, Channels>::new(
+        ClientConfig::default(),
+        shared_config()
+    ))
+    .add_plugin(BoardPlugin {
         running_state: AppState::InGame,
     })
     .add_system_set(SystemSet::on_enter(AppState::Paused).with_system(pause_screen))
@@ -38,9 +46,23 @@ fn main() {
     .add_system(state_handler)
     .add_system(game_state_handler)
     .add_startup_system(camera_setup)
-    .add_startup_system(setup_board);
+    .add_startup_system(setup_board)
+    .add_startup_system(init_network)
+    .add_system_to_stage(Stage::Connection, connect_event);
 
     app.run();
+}
+
+fn init_network(mut commands: Commands, mut client: Client<Protocol, Channels>) {
+    log::info!("Naia Client started");
+
+    client.auth(Auth::new("charlie", "12345"));
+    client.connect("udp://127.0.0.1:14191");
+}
+
+
+pub fn connect_event(client: Client<Protocol, Channels>) {
+    log::info!("Client connected to: {}", client.server_address());
 }
 
 fn camera_setup(mut commands: Commands) {
