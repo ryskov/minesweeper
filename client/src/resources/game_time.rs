@@ -27,4 +27,8 @@ impl GameTime {
         game_time_watch.pause();
         Self(game_time_watch)
     }
+
+    pub fn reset(&mut self) {
+        self.0.reset();
+    } 
 }

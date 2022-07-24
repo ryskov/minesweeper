@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use bevy::log;
 use bevy::prelude::*;
 use board_plugin::events::*;
@@ -56,7 +58,7 @@ fn game_state_handler(
     }
 }
 
-fn state_handler(mut state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
+fn state_handler(mut state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>, mut game_time: ResMut<GameTime>) {
     if keys.just_pressed(KeyCode::C) {
         log::debug!("clearing detected");
         if state.current() == &AppState::InGame {
@@ -66,6 +68,8 @@ fn state_handler(mut state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) 
     }
     if keys.just_pressed(KeyCode::G) {
         log::debug!("loading detected");
+        game_time.reset();
+        game_time.pause();
         match state.current() {
             AppState::InGame => {
                 state.restart().unwrap();
