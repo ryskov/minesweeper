@@ -1,11 +1,16 @@
-use bevy::core::Stopwatch;
 use bevy::log;
-use bevy::math::vec2;
 use bevy::prelude::*;
 use board_plugin::events::*;
 use board_plugin::resources::BoardOptions;
 use board_plugin::resources::{BoardAssets, SpriteMaterial};
 use board_plugin::BoardPlugin;
+
+mod resources;
+mod components;
+mod systems;
+
+use systems::{clear_pause_screen, pause_screen, game_time_system};
+use resources::GameTime;
 
 #[cfg(feature = "debug")]
 use bevy_inspector_egui::WorldInspectorPlugin;
@@ -16,35 +21,6 @@ pub enum AppState {
     Paused,
     GameOver,
     Out,
-}
-
-#[derive(Deref, DerefMut)]
-struct GameTime(Stopwatch);
-
-impl GameTime {
-    pub fn to_string(&self) -> String {
-        let duration = self.elapsed();
-        let minutes = (duration.as_secs() as f32 / 60.).floor() as u16;
-        let seconds = (duration.as_secs() % 60) as u16;
-        let minute_string = if minutes < 10 {
-            format!("0{}", minutes)
-        } else {
-            format!("{}", minutes)
-        };
-        let second_string = if seconds < 10 {
-            format!("0{}", seconds)
-        } else {
-            format!("{}", seconds)
-        };
-
-        format!("{}:{}", minute_string, second_string)
-    }
-
-    pub fn new_paused() -> Self {
-        let mut game_time_watch = Stopwatch::new();
-        game_time_watch.pause();
-        Self(game_time_watch)
-    }
 }
 
 fn main() {
@@ -77,75 +53,6 @@ fn main() {
 
 fn camera_setup(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-}
-
-fn game_time_system(
-    mut game_time: ResMut<GameTime>,
-    time: Res<Time>,
-    tile_trigger_evr: EventReader<TileTriggerEvent>,
-    tile_mark_trigger_evr: EventReader<TileMarkEvent>,
-) {
-    if game_time.paused() {
-        if tile_trigger_evr.len() > 0 || tile_mark_trigger_evr.len() > 0 {
-            log::info!("Game started");
-            game_time.unpause();
-        }
-    }
-
-    if !game_time.paused() {
-        game_time.tick(time.delta());
-    }
-}
-
-#[derive(Component)]
-struct PauseScreen;
-
-fn pause_screen(
-    mut commands: Commands,
-    windows: Res<Windows>,
-    game_time: ResMut<GameTime>,
-    board_assets: Res<BoardAssets>,
-) {
-    let window = windows.get_primary().unwrap();
-
-    commands
-        .spawn_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgba(0., 0., 0., 0.8),
-                custom_size: Some(vec2(window.width(), window.height())),
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(0., 0., 4.),
-            ..Default::default()
-        })
-        .insert(PauseScreen)
-        .insert(Name::new("PauseScreen"))
-        .with_children(|parent| {
-            parent.spawn_bundle(Text2dBundle {
-                text: Text {
-                    sections: vec![TextSection {
-                        value: format!("PAUSED - {}", game_time.to_string()),
-                        style: TextStyle {
-                            font: board_assets.bomb_counter_font.clone(),
-                            font_size: 100.,
-                            color: Color::WHITE,
-                        },
-                    }],
-                    alignment: TextAlignment {
-                        vertical: VerticalAlign::Center,
-                        horizontal: HorizontalAlign::Center,
-                    },
-                },
-                transform: Transform::from_xyz(0., 0., 1.),
-                ..Default::default()
-            });
-        });
-}
-
-fn clear_pause_screen(mut commands: Commands, pause: Query<Entity, With<PauseScreen>>) {
-    for pause_screen in pause.iter() {
-        commands.entity(pause_screen).despawn_recursive();
-    }
 }
 
 fn setup_board(
